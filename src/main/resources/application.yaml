@@ -1,0 +1,28 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: order-service
+
+  datasource:
+    url: jdbc:mysql://localhost:3307/order_db
+    username: root
+    password: root
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  jackson:
+    time-zone: Asia/Kolkata
+
+logging:
+  level:
+    org.springframework: INFO
+    org.hibernate.SQL: DEBUG
