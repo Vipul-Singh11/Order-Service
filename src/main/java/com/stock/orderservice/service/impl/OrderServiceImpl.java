@@ -10,6 +10,7 @@ import com.stock.orderservice.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import com.stock.orderservice.client.MatchingEngineClient;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
+    private final MatchingEngineClient matchingEngineClient;
 
     @Override
     public OrderResponseDto placeOrder(OrderRequestDto requestDto) {
@@ -34,14 +36,22 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
         Order savedOrder = orderRepository.save(order);
+        log.info("🔥 Sending order to Matching Engine...");
 
-        // 🔥 EVENT PLACEHOLDER (VERY IMPORTANT)
         log.info("Order created with id: {}, type: {}, symbol: {}, quantity: {}",
                 savedOrder.getId(),
                 savedOrder.getOrderType(),
                 savedOrder.getStockSymbol(),
                 savedOrder.getQuantity()
         );
+
+        // 🔥 NEW STEP: Send to Matching Engine
+        try {
+            matchingEngineClient.sendOrderToMatchingEngine(requestDto, savedOrder.getId());
+            log.info("Order sent to Matching Engine successfully");
+        } catch (Exception e) {
+            log.error("Failed to send order to Matching Engine: {}", e.getMessage());
+        }
 
         return mapToDto(savedOrder);
     }
