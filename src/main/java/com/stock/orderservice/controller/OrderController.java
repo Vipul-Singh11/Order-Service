@@ -2,6 +2,7 @@ package com.stock.orderservice.controller;
 
 import com.stock.orderservice.dto.OrderRequestDto;
 import com.stock.orderservice.dto.OrderResponseDto;
+import com.stock.orderservice.entity.OrderStatus;
 import com.stock.orderservice.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,5 +34,15 @@ public class OrderController {
     @GetMapping("/{id}")
     public ResponseEntity<OrderResponseDto> getOrderById(@PathVariable Long id) {
         return ResponseEntity.ok(orderService.getOrderById(id));
+    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<OrderResponseDto> updateOrderStatus(
+            @PathVariable Long id,
+            @RequestParam OrderStatus status) {
+
+        return ResponseEntity.ok(
+                orderService.updateOrderStatus(id, status)
+        );
     }
 }

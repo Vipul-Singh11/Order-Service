@@ -87,4 +87,21 @@ public class OrderServiceImpl implements OrderService {
                 .createdAt(order.getCreatedAt())
                 .build();
     }
+
+    @Override
+    public OrderResponseDto updateOrderStatus(Long orderId, OrderStatus status) {
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Order not found with id: " + orderId));
+
+        order.setStatus(status);
+
+        Order updatedOrder = orderRepository.save(order);
+
+        log.info("Order {} updated to {}", orderId, status);
+
+        return mapToDto(updatedOrder);
+    }
 }
