@@ -5,6 +5,7 @@ import com.stock.orderservice.dto.OrderRequestDto;
 import com.stock.orderservice.dto.OrderResponseDto;
 import com.stock.orderservice.entity.Order;
 import com.stock.orderservice.entity.OrderStatus;
+import com.stock.orderservice.exception.OrderValidationException;
 import com.stock.orderservice.exception.ResourceNotFoundException;
 import com.stock.orderservice.repository.OrderRepository;
 import com.stock.orderservice.service.OrderService;
@@ -12,7 +13,12 @@ import com.stock.orderservice.client.MatchingEngineClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
+import com.stock.orderservice.client.PortfolioServiceClient;
+import com.stock.orderservice.client.UserServiceClient;
+import com.stock.orderservice.dto.PortfolioResponseDto;
+import com.stock.orderservice.dto.UserResponseDto;
+import com.stock.orderservice.entity.OrderType;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,9 +29,19 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final MatchingEngineClient matchingEngineClient;
+    private final UserServiceClient userServiceClient;
+    private final PortfolioServiceClient portfolioServiceClient;
 
     @Override
     public OrderResponseDto placeOrder(OrderRequestDto requestDto) {
+
+        if (requestDto.getOrderType() == OrderType.BUY) {
+            validateBuyOrder(requestDto);
+        }
+
+        if (requestDto.getOrderType() == OrderType.SELL) {
+            validateSellOrder(requestDto);
+        }
 
         Order order = Order.builder()
                 .userId(requestDto.getUserId())
@@ -103,5 +119,54 @@ public class OrderServiceImpl implements OrderService {
         log.info("Order {} updated to {}", orderId, status);
 
         return mapToDto(updatedOrder);
+    }
+
+    private void validateBuyOrder(OrderRequestDto requestDto) {
+
+        UserResponseDto user =
+                userServiceClient.getUser(
+                        requestDto.getUserId());
+
+        BigDecimal requiredAmount =
+                requestDto.getPrice()
+                        .multiply(
+                                BigDecimal.valueOf(
+                                        requestDto.getQuantity()));
+
+        if (user.getWalletBalance()
+                .compareTo(requiredAmount) < 0) {
+
+            throw new OrderValidationException(
+        "Insufficient wallet balance");
+        }
+    }
+
+    private void validateSellOrder(OrderRequestDto requestDto) {
+
+        List<PortfolioResponseDto> holdings =
+                portfolioServiceClient.getPortfolio(
+                        requestDto.getUserId());
+
+        PortfolioResponseDto holding =
+                holdings.stream()
+                        .filter(p ->
+                                p.getStockSymbol()
+                                        .equalsIgnoreCase(
+                                                requestDto.getStockSymbol()))
+                        .findFirst()
+                        .orElse(null);
+
+        if (holding == null) {
+            throw new OrderValidationException(
+            "No holdings found for stock "
+                    + requestDto.getStockSymbol());
+        }
+
+        if (holding.getQuantity()
+                < requestDto.getQuantity()) {
+
+            throw new OrderValidationException(
+        "Insufficient stock holdings");
+        }
     }
 }

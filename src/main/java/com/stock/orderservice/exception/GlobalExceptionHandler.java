@@ -40,6 +40,16 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(OrderValidationException.class)
+    public ResponseEntity<Map<String, String>> handleOrderValidationException(
+            OrderValidationException ex) {
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", ex.getMessage());
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
     // 🔹 Handle all other exceptions (500 fallback)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGlobalException(Exception ex) {

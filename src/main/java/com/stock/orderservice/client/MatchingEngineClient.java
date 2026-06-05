@@ -1,15 +1,21 @@
 package com.stock.orderservice.client;
 
 import com.stock.orderservice.dto.OrderEventDto;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Component
-@RequiredArgsConstructor
 public class MatchingEngineClient {
 
     private final WebClient webClient;
+
+    public MatchingEngineClient(
+            @Qualifier("matchingEngineWebClient")
+            WebClient webClient) {
+
+        this.webClient = webClient;
+    }
 
     public void sendOrderToMatchingEngine(OrderEventDto eventDto) {
 
