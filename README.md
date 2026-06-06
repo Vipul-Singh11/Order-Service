@@ -130,7 +130,6 @@ Example:
 - Global exception handling using @RestControllerAdvice
 - Clean separation of layers (Controller → Service → Repository)
 - Entity mapping with JPA
-- Logging using SLF4J
 - Preparation for event-driven architecture
 
 ---
