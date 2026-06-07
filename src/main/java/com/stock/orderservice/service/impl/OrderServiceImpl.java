@@ -169,4 +169,46 @@ public class OrderServiceImpl implements OrderService {
         "Insufficient stock holdings");
         }
     }
+
+    @Override
+    public OrderResponseDto cancelOrder(Long orderId) {
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Order not found with id: " + orderId));
+
+        if (order.getStatus() == OrderStatus.EXECUTED) {
+            throw new OrderValidationException(
+                    "Executed order cannot be cancelled");
+        }
+
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            throw new OrderValidationException(
+                    "Order is already cancelled");
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
+
+        Order updatedOrder = orderRepository.save(order);
+
+        try {
+
+            matchingEngineClient.cancelOrder(orderId);
+
+            log.info(
+                    "Order {} removed from Matching Engine",
+                    orderId);
+
+        } catch (Exception e) {
+
+            log.error(
+                    "Failed to remove order from Matching Engine: {}",
+                    e.getMessage());
+        }
+
+        log.info("Order {} cancelled successfully", orderId);
+
+        return mapToDto(updatedOrder);
+    }
 }

@@ -26,4 +26,13 @@ public class MatchingEngineClient {
                 .bodyToMono(Void.class)
                 .block();
     }
+
+    public void cancelOrder(Long orderId) {
+
+        webClient.delete()
+                .uri("/api/v1/matching-engine/orders/" + orderId)
+                .retrieve()
+                .bodyToMono(Void.class)
+                .block();
+    }
 }

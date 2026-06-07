@@ -45,4 +45,12 @@ public class OrderController {
                 orderService.updateOrderStatus(id, status)
         );
     }
+
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<OrderResponseDto> cancelOrder(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                orderService.cancelOrder(id));
+    }
 }

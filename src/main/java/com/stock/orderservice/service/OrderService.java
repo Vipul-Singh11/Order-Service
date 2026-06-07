@@ -15,4 +15,6 @@ public interface OrderService {
     OrderResponseDto getOrderById(Long id);
 
     OrderResponseDto updateOrderStatus(Long orderId, OrderStatus status);
+
+    OrderResponseDto cancelOrder(Long orderId);
 }
