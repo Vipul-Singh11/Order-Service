@@ -16,6 +16,7 @@ public class OrderResponseDto {
     private Long userId;
     private String stockSymbol;
     private int quantity;
+    private Integer remainingQuantity;
     private BigDecimal price;
     private OrderType orderType;
     private OrderStatus status;

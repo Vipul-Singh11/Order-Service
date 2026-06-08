@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.stock.orderservice.dto.OrderExecutionDto;
 
 import java.util.List;
 
@@ -52,5 +53,16 @@ public class OrderController {
 
         return ResponseEntity.ok(
                 orderService.cancelOrder(id));
+    }
+
+    @PutMapping("/{id}/execution")
+    public ResponseEntity<OrderResponseDto> updateOrderExecution(
+            @PathVariable Long id,
+            @RequestBody OrderExecutionDto executionDto) {
+
+        return ResponseEntity.ok(
+                orderService.updateOrderExecution(
+                        id,
+                        executionDto.getExecutedQuantity()));
     }
 }

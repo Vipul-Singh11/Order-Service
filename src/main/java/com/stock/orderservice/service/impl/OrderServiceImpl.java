@@ -44,13 +44,14 @@ public class OrderServiceImpl implements OrderService {
         }
 
         Order order = Order.builder()
-                .userId(requestDto.getUserId())
-                .stockSymbol(requestDto.getStockSymbol())
-                .quantity(requestDto.getQuantity())
-                .price(requestDto.getPrice())
-                .orderType(requestDto.getOrderType())
-                .status(OrderStatus.PENDING)
-                .build();
+                        .userId(requestDto.getUserId())
+                        .stockSymbol(requestDto.getStockSymbol())
+                        .quantity(requestDto.getQuantity())
+                        .remainingQuantity(requestDto.getQuantity())
+                        .price(requestDto.getPrice())
+                        .orderType(requestDto.getOrderType())
+                        .status(OrderStatus.PENDING)
+                        .build();
 
         Order savedOrder = orderRepository.save(order);
 
@@ -97,6 +98,7 @@ public class OrderServiceImpl implements OrderService {
                 .userId(order.getUserId())
                 .stockSymbol(order.getStockSymbol())
                 .quantity(order.getQuantity())
+                .remainingQuantity(order.getRemainingQuantity())
                 .price(order.getPrice())
                 .orderType(order.getOrderType())
                 .status(order.getStatus())
@@ -208,6 +210,43 @@ public class OrderServiceImpl implements OrderService {
         }
 
         log.info("Order {} cancelled successfully", orderId);
+
+        return mapToDto(updatedOrder);
+    }
+
+    @Override
+    public OrderResponseDto updateOrderExecution(
+                Long orderId,
+                Integer executedQuantity) {
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Order not found with id: " + orderId));
+
+        int remaining =
+                order.getRemainingQuantity() - executedQuantity;
+
+        if (remaining < 0) {
+                throw new OrderValidationException(
+                        "Executed quantity exceeds remaining quantity");
+        }
+
+        order.setRemainingQuantity(remaining);
+
+        if (remaining == 0) {
+                order.setStatus(OrderStatus.EXECUTED);
+        } else {
+                order.setStatus(OrderStatus.PARTIALLY_FILLED);
+        }
+
+        Order updatedOrder = orderRepository.save(order);
+
+        log.info(
+                "Order {} executed for {} shares. Remaining: {}",
+                orderId,
+                executedQuantity,
+                remaining);
 
         return mapToDto(updatedOrder);
     }

@@ -27,6 +27,8 @@ public class Order {
 
     private Integer quantity;
 
+    private Integer remainingQuantity;
+
     private BigDecimal price;
 
     @Enumerated(EnumType.STRING)
