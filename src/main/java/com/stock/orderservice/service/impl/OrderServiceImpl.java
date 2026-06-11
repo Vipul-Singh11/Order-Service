@@ -36,7 +36,18 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponseDto placeOrder(OrderRequestDto requestDto) {
 
         if (requestDto.getOrderType() == OrderType.BUY) {
-            validateBuyOrder(requestDto);
+
+                validateBuyOrder(requestDto);
+
+                BigDecimal requiredAmount =
+                        requestDto.getPrice()
+                                .multiply(
+                                        BigDecimal.valueOf(
+                                                requestDto.getQuantity()));
+
+                userServiceClient.reserveAmount(
+                        requestDto.getUserId(),
+                        requiredAmount);
         }
 
         if (requestDto.getOrderType() == OrderType.SELL) {
@@ -135,11 +146,11 @@ public class OrderServiceImpl implements OrderService {
                                 BigDecimal.valueOf(
                                         requestDto.getQuantity()));
 
-        if (user.getWalletBalance()
+        if (user.getAvailableBalance()
                 .compareTo(requiredAmount) < 0) {
 
-            throw new OrderValidationException(
-        "Insufficient wallet balance");
+        throw new OrderValidationException(
+                "Insufficient available balance");
         }
     }
 
@@ -190,6 +201,24 @@ public class OrderServiceImpl implements OrderService {
                     "Order is already cancelled");
         }
 
+        if (order.getOrderType() == OrderType.BUY) {
+
+                BigDecimal reservedAmount =
+                        order.getPrice()
+                                .multiply(
+                                        BigDecimal.valueOf(
+                                                order.getRemainingQuantity()));
+
+                userServiceClient.releaseAmount(
+                        order.getUserId(),
+                        reservedAmount);
+
+                log.info(
+                        "Released {} for cancelled BUY order {}",
+                        reservedAmount,
+                        orderId);
+        }
+
         order.setStatus(OrderStatus.CANCELLED);
 
         Order updatedOrder = orderRepository.save(order);
@@ -238,6 +267,24 @@ public class OrderServiceImpl implements OrderService {
                 order.setStatus(OrderStatus.EXECUTED);
         } else {
                 order.setStatus(OrderStatus.PARTIALLY_FILLED);
+        }
+
+        if (order.getOrderType() == OrderType.BUY) {
+
+                BigDecimal consumedAmount =
+                        order.getPrice()
+                                .multiply(
+                                        BigDecimal.valueOf(
+                                                executedQuantity));
+
+                userServiceClient.consumeReservedAmount(
+                        order.getUserId(),
+                        consumedAmount);
+
+                log.info(
+                        "Consumed reserved funds {} for order {}",
+                        consumedAmount,
+                        orderId);
         }
 
         Order updatedOrder = orderRepository.save(order);
