@@ -51,7 +51,11 @@ public class OrderServiceImpl implements OrderService {
         }
 
         if (requestDto.getOrderType() == OrderType.SELL) {
-            validateSellOrder(requestDto);
+                validateSellOrder(requestDto);
+                portfolioServiceClient.reserveShares(
+                        requestDto.getUserId(),
+                        requestDto.getStockSymbol(),
+                        requestDto.getQuantity());
         }
 
         Order order = Order.builder()
@@ -175,11 +179,10 @@ public class OrderServiceImpl implements OrderService {
                     + requestDto.getStockSymbol());
         }
 
-        if (holding.getQuantity()
-                < requestDto.getQuantity()) {
+        if (holding.getAvailableQuantity() < requestDto.getQuantity()) {
 
-            throw new OrderValidationException(
-        "Insufficient stock holdings");
+                throw new OrderValidationException(
+                "Insufficient available stock holdings");
         }
     }
 
@@ -216,6 +219,17 @@ public class OrderServiceImpl implements OrderService {
                 log.info(
                         "Released {} for cancelled BUY order {}",
                         reservedAmount,
+                        orderId);
+        }
+
+        if (order.getOrderType() == OrderType.SELL) {
+                portfolioServiceClient.releaseReservedShares(
+                        order.getUserId(),
+                        order.getStockSymbol(),
+                        order.getRemainingQuantity());
+                log.info(
+                        "Released {} shares for cancelled SELL order {}",
+                        order.getRemainingQuantity(),
                         orderId);
         }
 
@@ -270,20 +284,28 @@ public class OrderServiceImpl implements OrderService {
         }
 
         if (order.getOrderType() == OrderType.BUY) {
-
                 BigDecimal consumedAmount =
                         order.getPrice()
                                 .multiply(
                                         BigDecimal.valueOf(
                                                 executedQuantity));
-
                 userServiceClient.consumeReservedAmount(
                         order.getUserId(),
                         consumedAmount);
-
                 log.info(
                         "Consumed reserved funds {} for order {}",
                         consumedAmount,
+                        orderId);
+        }
+
+        if (order.getOrderType() == OrderType.SELL) {
+                portfolioServiceClient.consumeReservedShares(
+                        order.getUserId(),
+                        order.getStockSymbol(),
+                        executedQuantity);
+                log.info(
+                        "Consumed {} reserved shares for order {}",
+                        executedQuantity,
                         orderId);
         }
 
