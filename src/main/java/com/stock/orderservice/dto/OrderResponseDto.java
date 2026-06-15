@@ -1,5 +1,6 @@
 package com.stock.orderservice.dto;
 
+import com.stock.orderservice.entity.OrderExecutionType;
 import com.stock.orderservice.entity.OrderStatus;
 import com.stock.orderservice.entity.OrderType;
 import lombok.Builder;
@@ -21,4 +22,5 @@ public class OrderResponseDto {
     private OrderType orderType;
     private OrderStatus status;
     private LocalDateTime createdAt;
+    private OrderExecutionType executionType;
 }

@@ -1,5 +1,6 @@
 package com.stock.orderservice.dto;
 
+import com.stock.orderservice.entity.OrderExecutionType;
 import com.stock.orderservice.entity.OrderType;
 import lombok.Builder;
 import lombok.Data;
@@ -24,4 +25,6 @@ public class OrderEventDto {
     private OrderType orderType;
 
     private LocalDateTime timestamp;
+
+    private OrderExecutionType executionType;
 }

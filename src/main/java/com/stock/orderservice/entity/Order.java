@@ -35,6 +35,9 @@ public class Order {
     private OrderType orderType;
 
     @Enumerated(EnumType.STRING)
+    private OrderExecutionType executionType;
+
+    @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
     @CreationTimestamp

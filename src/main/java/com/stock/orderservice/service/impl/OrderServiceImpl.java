@@ -4,7 +4,9 @@ import com.stock.orderservice.dto.OrderEventDto;
 import com.stock.orderservice.dto.OrderRequestDto;
 import com.stock.orderservice.dto.OrderResponseDto;
 import com.stock.orderservice.entity.Order;
+import com.stock.orderservice.entity.OrderExecutionType;
 import com.stock.orderservice.entity.OrderStatus;
+import com.stock.orderservice.entity.OrderType;
 import com.stock.orderservice.exception.OrderValidationException;
 import com.stock.orderservice.exception.ResourceNotFoundException;
 import com.stock.orderservice.repository.OrderRepository;
@@ -17,7 +19,6 @@ import com.stock.orderservice.client.PortfolioServiceClient;
 import com.stock.orderservice.client.UserServiceClient;
 import com.stock.orderservice.dto.PortfolioResponseDto;
 import com.stock.orderservice.dto.UserResponseDto;
-import com.stock.orderservice.entity.OrderType;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,6 +35,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderResponseDto placeOrder(OrderRequestDto requestDto) {
+
+        validateOrderRequest(requestDto);
 
         if (requestDto.getOrderType() == OrderType.BUY) {
 
@@ -65,6 +68,7 @@ public class OrderServiceImpl implements OrderService {
                         .remainingQuantity(requestDto.getQuantity())
                         .price(requestDto.getPrice())
                         .orderType(requestDto.getOrderType())
+                        .executionType(requestDto.getExecutionType())
                         .status(OrderStatus.PENDING)
                         .build();
 
@@ -79,6 +83,7 @@ public class OrderServiceImpl implements OrderService {
                 .quantity(savedOrder.getQuantity())
                 .price(savedOrder.getPrice())
                 .orderType(savedOrder.getOrderType())
+                .executionType(savedOrder.getExecutionType())
                 .timestamp(java.time.LocalDateTime.now())
                 .build();
 
@@ -116,6 +121,7 @@ public class OrderServiceImpl implements OrderService {
                 .remainingQuantity(order.getRemainingQuantity())
                 .price(order.getPrice())
                 .orderType(order.getOrderType())
+                .executionType(order.getExecutionType())
                 .status(order.getStatus())
                 .createdAt(order.getCreatedAt())
                 .build();
@@ -318,5 +324,18 @@ public class OrderServiceImpl implements OrderService {
                 remaining);
 
         return mapToDto(updatedOrder);
+    }
+
+    private void validateOrderRequest(OrderRequestDto requestDto) {
+
+        if (requestDto.getExecutionType() == OrderExecutionType.LIMIT) {
+
+                if (requestDto.getPrice() == null
+                        || requestDto.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
+
+                throw new OrderValidationException(
+                        "Price is required for LIMIT orders");
+                }
+        }
     }
 }
