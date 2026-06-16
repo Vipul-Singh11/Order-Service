@@ -328,14 +328,17 @@ public class OrderServiceImpl implements OrderService {
 
     private void validateOrderRequest(OrderRequestDto requestDto) {
 
-        if (requestDto.getExecutionType() == OrderExecutionType.LIMIT) {
+        if (requestDto.getExecutionType() == OrderExecutionType.MARKET) {
 
-                if (requestDto.getPrice() == null
-                        || requestDto.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new OrderValidationException(
+                        "MARKET orders are not supported yet");
+        }
+
+        if (requestDto.getPrice() == null
+                || requestDto.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
 
                 throw new OrderValidationException(
                         "Price is required for LIMIT orders");
-                }
         }
     }
 }
